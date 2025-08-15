@@ -2,8 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { toast } from 'sonner';
 import { Copy, Check, FileText } from 'lucide-react';
-import "github-markdown-css/github-markdown.css";
-import GitHubMarkdown from './components/Github_ReadME_Styler';
+import { renderMarkdownWithGitHubAPI, GitHubMarkdown } from './components/Github_ReadME_Styler'; 
 
 function App() {
   const [projectName, setProjectName] = useState("");
@@ -14,6 +13,8 @@ function App() {
   const [readme, setReadme] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [html, setHtml] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async (e: any) => {
     e.preventDefault();
@@ -36,6 +37,13 @@ function App() {
 
       if (data.readme) {
         setReadme(data.readme);
+        try {
+        const rendered = await renderMarkdownWithGitHubAPI(data.readme);
+        setHtml(rendered);
+        } catch (err: any) {
+          setError(err.message || "Error rendering Markdown");
+          toast.error("There was an error rendering the Markdown preview.");
+        }
       } else {
         toast.error("There was an error generating the README.");
         setReadme("Error generating README.");
@@ -44,6 +52,20 @@ function App() {
       setLoading(false);
       toast.error("There was an error generating the README.");
       setReadme("Error generating README: " + error.message);
+    }
+  };
+
+  const handleGitHubAPI = async (e: any, data: any) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const rendered = await renderMarkdownWithGitHubAPI(data);
+      setHtml(rendered);
+    } catch (err: any) {
+      setError(err.message || "Error rendering Markdown");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +126,15 @@ function App() {
             <h2>Generated README.md Editor</h2>
             <div>
               <button
+                onClick={(e) => handleGitHubAPI(e, readme)}
+                disabled={!readme}
+                className="h-8 px-3 gap-2"
+              >
+               Update Preview
+              </button>
+            </div>
+            <div>
+              <button
                 onClick={copyToClipboard}
                 disabled={!readme}
                 className="h-8 px-3 gap-2"
@@ -137,7 +168,7 @@ function App() {
             <h2>Preview</h2>
             {readme ? (
               <div className="w-full whitespace-pre-wrap break-words p-4 text-left prose prose-sm"> 
-                <GitHubMarkdown readme={readme} />
+                <GitHubMarkdown html={html} loading={loading} error={error} />
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-center p-6">

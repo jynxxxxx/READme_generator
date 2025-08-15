@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-
 // This component fetches the rendered HTML of a README from the GitHub API
 // Uses free version with limit of 60 requests per hour. Update if you need more.
-async function renderMarkdownWithGitHubAPI(markdownText: string) {
+export async function renderMarkdownWithGitHubAPI(markdownText: string) {
   const response = await fetch("https://api.github.com/markdown", {
     method: "POST",
     headers: {
@@ -22,16 +20,22 @@ async function renderMarkdownWithGitHubAPI(markdownText: string) {
   return html;
 }
 
-export default function GitHubMarkdown({ readme }: { readme: string }) {
-  const [html, setHtml] = useState("");
+interface GitHubMarkdownProps {
+  html: string; // rendered HTML from parent
+  loading?: boolean;
+  error?: string | null;
+}
 
-  useEffect(() => {
-    renderMarkdownWithGitHubAPI(readme)
-      .then(setHtml)
-      .catch((err) => console.error(err));
-  }, [readme]);
-
+export function GitHubMarkdown({ html, loading, error }: GitHubMarkdownProps) {
   return (
-    <div className="markdown-body w-full p-4" dangerouslySetInnerHTML={{ __html: html }} />
+    <div className="w-full">
+      {error && <p className="text-red-500 mb-2">{error}</p>}
+      {loading && <p className="mb-2">Generating...</p>}
+
+      <div
+        className="markdown-body"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
   );
 }
