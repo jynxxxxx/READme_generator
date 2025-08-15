@@ -64,6 +64,11 @@ async def generate_readme(data: ReadmeRequest):
         readme_prompt = f"""
             You are an expert open-source documentation writer.
             Generate a complete, professional README.md file in valid Markdown format for the following project:
+            - Keep formatting tight: do not add extra blank lines between headings, lists, or code blocks.
+            - Use single blank lines only where Markdown requires them (e.g., between headings and paragraphs or before/after code blocks).
+            - Do not wrap the output in triple backticks.
+            - Include code fences only for actual code blocks (bash commands or code snippets).
+            - Return only raw Markdown content, no explanations or commentary.
 
             Project Name: {data.project_name}
             Description: {polished_description}
@@ -82,11 +87,10 @@ async def generate_readme(data: ReadmeRequest):
             - Technologies used
             - License section
 
-            Formatting requirements:
-            - Use proper Markdown syntax for headings, bullet points, and code blocks.
-            - Do NOT wrap the entire output in triple backticks or specify a language (like ```markdown).
-            - Include code fences only for specific code snippets (e.g., bash commands).
-            - Return ONLY the raw Markdown content with no explanations or commentary.
+            Formatting details:
+            - Use proper headings (#, ##), bullet points (-), and numbered lists (1., 2., 3.).
+            - Keep code blocks indented properly under list items.
+            - Avoid extra blank lines anywhere.
         """
 
         response = client.models.generate_content(
