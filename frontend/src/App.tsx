@@ -159,12 +159,6 @@ function App() {
               className="w-full h-96 p-4 border rounded resize-none font-mono bg-gray-100 whitespace-pre-wrap break-words overflow-auto"
               placeholder="Your generated README will appear here and is editable..."
             />
-            {/* <pre className="w-full whitespace-pre-wrap break-words p-4 text-left">
-              <code>{readme}</code>
-            </pre> */}
-          </div>
-
-          <div>
             <h2>Preview</h2>
             {readme ? (
               <div className="w-full whitespace-pre-wrap break-words p-4 text-left prose prose-sm"> 
