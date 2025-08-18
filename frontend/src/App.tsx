@@ -3,12 +3,14 @@ import './App.css'
 import { toast } from 'sonner';
 import { Copy, Check, FileText } from 'lucide-react';
 import { renderMarkdownWithGitHubAPI, GitHubMarkdown } from './components/Github_ReadME_Styler'; 
+import { techOptions } from './components/TechnologyList';
+import CreatableSelect from "react-select/creatable";
 
 function App() {
   const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
   const [features, setFeatures] = useState("");
-  const [technologies, setTechnologies] = useState("");
+  const [technologies, setTechnologies] = useState<{ value: string; label: string }[]>([]);
   const [license, setLicense] = useState("");
   const [readme, setReadme] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,10 +18,20 @@ function App() {
   const [html, setHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && event.currentTarget instanceof HTMLInputElement) {
+      const inputValue = event.currentTarget.value.trim();
+      if (inputValue && !technologies.some(t => t.value === inputValue)) {
+        setTechnologies([...technologies, { value: inputValue, label: inputValue }]);
+      }
+    }
+  };
+  
   const handleGenerate = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-    setReadme("");
+    setReadme(""); 
+  
     try {
       const res = await fetch("http://localhost:8000/generate", {
         method: "POST",
@@ -28,7 +40,7 @@ function App() {
           project_name: projectName,
           description: description,
           features: features.split(",").map(f => f.trim()),
-          technologies: technologies.split(",").map(t => t.trim())
+          technologies: technologies.map(t => t.value) 
         })
       });
 
@@ -50,6 +62,7 @@ function App() {
       }
     } catch (error: any) {
       setLoading(false);
+      // Error generating README: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
       toast.error("There was an error generating the README.");
       setReadme("Error generating README: " + error.message);
     }
@@ -92,32 +105,54 @@ function App() {
               placeholder="Project Name"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className='border rounded-md p-2'
+              className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
             />
             <textarea
               placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className='border rounded-md p-2'
+              className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
             />
             <input
               placeholder="Features (comma-separated)"
               value={features}
               onChange={(e) => setFeatures(e.target.value)}
-              className='border rounded-md p-2'
+              className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
             />
-            <input
-              placeholder="Technologies (comma-separated)"
+            <CreatableSelect
+              isMulti
+              options={techOptions}
               value={technologies}
-              onChange={(e) => setTechnologies(e.target.value)}
-              className='border rounded-md p-2'
+              onChange={(val) => setTechnologies(val as { value: string; label: string }[])}
+              onKeyDown={handleKeyDown}
+              placeholder="Select or add technologies..."
+              formatCreateLabel={(inputValue) => inputValue} 
+              styles={{
+                control: (provided, state) => ({
+                  ...provided,
+                  minHeight: '2.5rem',
+                  height: 'fit-content',
+                  border: state.isFocused ? '1px solid #6b7280' : '1px solid #213547',
+                  borderRadius: '0.375rem',
+                  padding: 0,
+                  boxShadow: state.isFocused ?'0 0 0 1px #6b7280' : 'none',
+                  textAlign: 'left',
+                  '&:hover': {
+                    outline: 'none',
+                  },
+                }),
+                option: (provided) => ({
+                  ...provided,
+                  textAlign: 'left',
+                }),
+              }}
             />
             <input
               placeholder="License (optional)"
               value={license}
               onChange={(e) => setLicense(e.target.value)}
-              className='border rounded-md p-2'
+              className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
             />
             <button type="submit" className='border rounded-md p-2' >Generate README</button>
           </form>
@@ -159,6 +194,9 @@ function App() {
               className="w-full h-96 p-4 border rounded resize-none font-mono bg-gray-100 whitespace-pre-wrap break-words overflow-auto"
               placeholder="Your generated README will appear here and is editable..."
             />
+          </div>
+
+          <div>
             <h2>Preview</h2>
             {readme ? (
               <div className="w-full whitespace-pre-wrap break-words p-4 text-left prose prose-sm"> 
