@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
 import { toast } from 'sonner';
 import { Copy, Check, FileText } from 'lucide-react';
 import { renderMarkdownWithGitHubAPI, GitHubMarkdown } from './components/Github_ReadME_Styler'; 
 import { techOptions } from './components/TechnologyList';
 import CreatableSelect from "react-select/creatable";
+import TextareaAutosize from "react-textarea-autosize";
 
 function App() {
+  const readmeRef = useRef<HTMLDivElement>(null);
   const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
   const [features, setFeatures] = useState("");
@@ -31,7 +33,16 @@ function App() {
     e.preventDefault();
     setLoading(true);
     setReadme(""); 
-  
+
+    if (readmeRef.current) {
+      const top = readmeRef.current.getBoundingClientRect().top + window.scrollY;
+      const offset = window.innerHeight / 3; // one-third from top
+      window.scrollTo({
+        top: top - offset,
+        behavior: "smooth",
+      });
+    }
+
     try {
       const res = await fetch("http://localhost:8000/generate", {
         method: "POST",
@@ -95,17 +106,17 @@ function App() {
 
   return (
     <div >
-      <h1>README Generator</h1>
+      <h1 className='font-extrabold text-3xl mb-4'>README Generator</h1>
       <div className="min-h-screen">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
-          <form 
+        <form 
             onSubmit={handleGenerate}
-            className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-md'>
+            className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-md max-w-2xl mx-auto my-8'>
             <input
               placeholder="Project Name"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
+              required
             />
             <textarea
               placeholder="Description"
@@ -113,6 +124,7 @@ function App() {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
+              required
             />
             <input
               placeholder="Features (comma-separated)"
@@ -155,55 +167,59 @@ function App() {
               className='border rounded-md p-2 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none'
             />
             <button type="submit" className='border rounded-md p-2' >Generate README</button>
-          </form>
-
-          <div>
-            <h2>Generated README.md Editor</h2>
-            <div>
-              <button
-                onClick={(e) => handleGitHubAPI(e, readme)}
-                disabled={!readme}
-                className="h-8 px-3 gap-2"
-              >
-               Update Preview
-              </button>
-            </div>
-            <div>
-              <button
-                onClick={copyToClipboard}
-                disabled={!readme}
-                className="h-8 px-3 gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3 w-3 text-accent" />
-                    <span className="text-xs">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    <span className="text-xs">Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
+        </form>
+        <div className="h-px border-b border-gray-200 mx-6 mt-16 mb-12"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
+          <div ref={readmeRef} >
+            <h2 className='font-extrabold text-3xl mb-4'>Generated README.md Editor</h2>
             {loading && <p>Generating...</p>}
-            <textarea
+            <TextareaAutosize
               value={readme}
               onChange={(e) => setReadme(e.target.value)}
-              className="w-full h-96 p-4 border rounded resize-none font-mono bg-gray-100 whitespace-pre-wrap break-words overflow-auto"
+              className="w-full min-h-[80%] p-8 border rounded resize-none font-mono bg-gray-100 break-words overflow-auto"
               placeholder="Your generated README will appear here and is editable..."
+              minRows={10}
             />
+            <div className="flex justify-end items-center gap-4">
+              <div>
+                <button
+                  onClick={(e) => handleGitHubAPI(e, readme)}
+                  disabled={!readme}
+                  className="px-3 gap-2 w-fit text-sm"
+                >
+                  Update Preview
+                </button>
+              </div>
+              <div>
+                <button
+                  onClick={copyToClipboard}
+                  disabled={!readme}
+                  className="px-3 gap-2 flex items-center justify-center text-sm"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3 text-accent" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-
+          
           <div>
-            <h2>Preview</h2>
+            <h2 className='font-extrabold text-3xl mb-4'>Preview</h2>
             {readme ? (
-              <div className="w-full whitespace-pre-wrap break-words p-4 text-left prose prose-sm"> 
+              <div className="w-full break-words p-8 text-left prose prose-sm border rounded resize-none"> 
                 <GitHubMarkdown html={html} loading={loading} error={error} />
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-center p-6">
+              <div className="min-h-[80%] flex items-center justify-center text-center p-6 border rounded resize-none">
                 <div className="space-y-3">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
                     <FileText className="h-8 w-8 text-muted-foreground" />
