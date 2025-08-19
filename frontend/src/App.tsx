@@ -69,13 +69,12 @@ function App() {
         }
       } else {
         toast.error("There was an error generating the README.");
-        setReadme("Error generating README.");
+        setReadme("");
       }
     } catch (error: any) {
       setLoading(false);
-      // Error generating README: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
-      toast.error("There was an error generating the README.");
-      setReadme("Error generating README: " + error.message);
+      toast.error(`There was an error generating the README: ${error.message}`);
+      setReadme("");
     }
   };
 
