@@ -11,7 +11,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 client = genai.Client(api_key=gemini_api_key)
-print("Gemini API key configured successfully")
+
 class ReadmeRequest(BaseModel):
     project_name: str
     description: str
@@ -41,7 +41,7 @@ async def generate_readme(data: ReadmeRequest):
     Returns:
         A formatted string of the README.md content.
     """
-    print("Received request to generate README for project:", data.project_name)
+
     try:
         rewrite_prompt = f"""
             You are an expert technical writer. 
@@ -53,13 +53,13 @@ async def generate_readme(data: ReadmeRequest):
             Original description:
             "{data.description}"
         """
-        print("data.description:", data.description)
+
         rewrite_response = client.models.generate_content(
             model="gemini-2.5-flash", 
             contents=rewrite_prompt
         )
         polished_description = rewrite_response.text.strip()
-        print("Polished description:", polished_description)
+
         #generate readme file
         readme_prompt = f"""
             You are an expert open-source documentation writer.
