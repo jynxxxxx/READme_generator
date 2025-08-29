@@ -24,7 +24,7 @@ GEMINI_API_KEY=YOUR_API_KEY
 ```
 4.  Build and run the application using Docker:
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 5.  Access the application in your browser at `http://localhost:3000`.
 
